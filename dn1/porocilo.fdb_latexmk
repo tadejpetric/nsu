@@ -1,6 +1,6 @@
 # Fdb version 4
-["pdflatex"] 1680473007 "/home/user/programming/nsu/dn1/porocilo.tex" "porocilo.pdf" "porocilo" 1680473007 0
-  "/home/user/programming/nsu/dn1/porocilo.tex" 1680473007 2737 671b829ccad94096b47716b9536b9a23 ""
+["pdflatex"] 1680519712 "/home/user/programming/nsu/dn1/porocilo.tex" "porocilo.pdf" "porocilo" 1680519713 0
+  "/home/user/programming/nsu/dn1/porocilo.tex" 1680519712 4444 c4ef14c62d1f60903d5656c611e5df7f ""
   "/usr/share/texmf-dist/fonts/map/fontname/texfonts.map" 1679564905 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/share/texmf-dist/fonts/tfm/public/cm/cmbx12.tfm" 1679564905 1324 c910af8c371558dc20f2d7822f66fe64 ""
   "/usr/share/texmf-dist/fonts/tfm/public/cm/cmr12.tfm" 1679564905 1288 655e228510b4c2a1abe905c368440826 ""
@@ -24,13 +24,13 @@
   "/usr/share/texmf-dist/web2c/texmf.cnf" 1679564905 39911 2da6c67557ec033436fe5418a70a8a61 ""
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1680467119 4621091 e8048671013c9c22f986c40e2ae8e1e8 ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1680467102 8204065 3c173b94dd271db9bbd86cce90bd3949 ""
-  "knn.png" 1680471283 25005 483d2cc83e1595fae4249a043913da2f ""
-  "mlp.png" 1680471367 57105 f66c5021b3f977f1311b906635c95f3c ""
-  "porocilo.aux" 1680473007 773 3174aef50e142fffe7a9c5e2d91d8bdf "pdflatex"
-  "porocilo.tex" 1680473007 2737 671b829ccad94096b47716b9536b9a23 ""
-  "rfc.png" 1680472244 25152 007f2855e049b66738357f8b632cd630 ""
+  "knn.png" 1680517401 25005 483d2cc83e1595fae4249a043913da2f ""
+  "mlp.png" 1680518210 44598 febccb401d8738610c50c534d57dc805 ""
+  "porocilo.aux" 1680519712 878 20cf3360e5e48e26e37800ae6775a2bd "pdflatex"
+  "porocilo.tex" 1680519712 4444 c4ef14c62d1f60903d5656c611e5df7f ""
+  "rfc.png" 1680517399 26091 1c4afb32a884cdbd5df8f168d86d99f6 ""
   "scores.png" 1680472740 16190 d21b390d93ae7475c0b760ac038953d3 ""
-  "svc.png" 1680471325 50032 83a4412ee7d48f8a3c1ce779ead0305b ""
+  "svc.png" 1680517407 50032 83a4412ee7d48f8a3c1ce779ead0305b ""
   (generated)
   "porocilo.aux"
   "porocilo.log"
