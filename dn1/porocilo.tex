@@ -6,7 +6,7 @@ Podatke razdelimo na train in test množico, hiperparametre nastavljamo na train
 
 Za avtomatiziran pristop preiskusimo tri algoritme: RFC, SVC in kNN. Številske parametre izbiramo enakomerno med smiselnimi vrednostmi, razen za parameter \verb|min_samples_split| (katerega izbiramo logenakomerno) in parameter \verb|gamma| in \verb|C| v SVC (izbiramo lognormalno). Poleg omenjenih nastavljamo v RFC: \verb|n_estimators| (med 32 in 200), \verb|max_depth| (med 2 in 32), \verb|criterion| (med gini, entropy in log\_loss); v SVC: \verb|shrinking| in tip jedra (sigmoid ali rbf); v kNN: \verb|n_neighbors| (med 2 in 256), \verb|weights| (uniform ali distance) in \verb|p| (1, 2, 3 ali 4).
 
-Najboljša konfiguracija je algoritem RFC z \verb|criterion="log_loss"|, \verb|max_depth=7|, \verb|min_samples_split=5|, \verb|n_estimators=127|
+Najboljša konfiguracija je algoritem RFC s \verb|criterion="log_loss"|, \verb|max_depth=7|, \verb|min_samples_split=5|, \verb|n_estimators=127|
 
 Ne razumem navodila za četrto alinejo; konfiguracija, ki jo vrne hyperopt je samo ena. Prilagam slike za različne konfiguracije algoritmov iz (1.1).
 \begin{figure}[h!]
@@ -40,7 +40,7 @@ Na množici za treniranje dobita ročno nastavljanje in hyperopt dobre rezultate
 \end{figure}
 
 \section{Meta učenje}
-Za metaznačilke sem uporabil knjižnico pymfe z skupinami ``general'' in ``info-theory''. To da dovolj dober nabor značilk, da poiščemo bližnje sosede vendar ne vsebuje preveč natančnih metaznačilk, da bi se prilegale samo mojemu naboru podatkov. Namesto ``info-theory'' bi lahko uporabili ``statistical'' ali ``landmarking'', vendar se izkaže, da ne spremeni zaključkov.
+Za metaznačilke sem uporabil knjižnico pymfe s skupinami ``general'' in ``info-theory''. To da dovolj dober nabor značilk, da poiščemo bližnje sosede vendar ne vsebuje preveč natančnih metaznačilk, da bi se prilegale samo mojemu naboru podatkov. Namesto ``info-theory'' bi lahko uporabili ``statistical'' ali ``landmarking'', vendar se izkaže, da ne spremeni zaključkov.
 
 Najbližji sosedi so \verb|colleges_usnews|, \verb|pc4| in \texttt{pc4\_seed\_0\_nrows\_2000\_nclasses} \texttt{\_10\_ncols\_100\_stratify\_True}.
 
