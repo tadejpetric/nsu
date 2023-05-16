@@ -1,3 +1,18 @@
 *.zip
 vaje8/data/*
+*/bin/
+*/include/
+*/lib/
+*/lib64
+*/pyvenv.cfg
+*/share
+
+
+*.model
+*.pickle
+*.txt
+
+*.pyc
+*/LICENSE
+*/__pycache__
 
