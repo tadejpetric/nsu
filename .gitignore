@@ -16,3 +16,6 @@ vaje8/data/*
 */LICENSE
 */__pycache__
 
+*.pyc
+*/LICENSE
+*/__pycache__
