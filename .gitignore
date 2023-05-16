@@ -8,6 +8,8 @@ vaje8/data/*
 */share
 */.venv
 
+
+*/hall_of_fame*
 *.model
 *.pickle
 *.txt
