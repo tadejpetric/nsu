@@ -6,7 +6,7 @@ vaje8/data/*
 */lib64
 */pyvenv.cfg
 */share
-
+*/.venv
 
 *.model
 *.pickle
