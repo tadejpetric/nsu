@@ -7,7 +7,7 @@ X = data.drop("Q", axis=1)
 y = data[["Q"]]
 
 model = PySRRegressor(
-    niterations=200,  # < Increase me for better results
+    niterations=3000,  # < Increase me for better results
     #populations=20,
     #population_size=50,
     ## ^ Slightly larger populations, for greater diversity.
