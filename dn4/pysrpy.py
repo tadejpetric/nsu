@@ -7,10 +7,7 @@ X = data.drop("Q", axis=1)
 y = data[["Q"]]
 
 model = PySRRegressor(
-    niterations=3000,  # < Increase me for better results
-    #populations=20,
-    #population_size=50,
-    ## ^ Slightly larger populations, for greater diversity.
+    niterations=3000,
     binary_operators=["+", "-", "*", "/"],
     unary_operators=[
         "cos",
@@ -25,15 +22,8 @@ model = PySRRegressor(
     tempdir="halls",
     delete_tempfiles=False,
     complexity_of_operators= {"sin": 3, "cos": 3, "cube": 4, "square": 2, "+" : 0.3, "*" : 0.3, "-": 0.3, "/" : 0.3},
-    #nested_constraints={
-    #    "cos" : {"cos" : 0, "sin" : 0},
-    #    "sin" : {"cos" : 0, "sin" : 0}
-    #},
-    ##timeout_in_seconds=60,
-    #complexity_of_constants=0,
     weight_randomize=0.15,
     turbo=True,
-    ##maxsize=20,
     maxdepth=10,
     procs=0,
     multithreading=False,
@@ -41,21 +31,6 @@ model = PySRRegressor(
     deterministic=True
 )
 
-#model = PySRRegressor( #dela dobro!
-#    niterations=40,  # < Increase me for better results
-#    binary_operators=["+", "*", "-", "/"],
-#    unary_operators=[
-#        "cos",
-#        "sin",
-#        "square",
-#        "cube",
-#        "inv(x) = 1/x",
-#        # ^ Custom operator (julia syntax)
-#    ],
-#    extra_sympy_mappings={"inv": lambda x: 1 / x},
-#    # ^ Define operator for SymPy as well
-#    # ^ Custom loss function (julia syntax)
-#)
 
 model.fit(X,y)
 
