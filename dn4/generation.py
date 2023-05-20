@@ -1,28 +1,30 @@
 import ProGED as pg
 import numpy as np
 
-def one_generation(eq, speed):
-
+def one_generation(eq, k, top):
+    # higher k, higher learning rate. k in [0, infty)
     gramatika = eq.gen_grammar()
     generator = pg.GeneratorGrammar(gramatika)
     ED = pg.EqDisco(data=eq.data, 
                     lhs_vars=eq.lhs,
                     rhs_vars=eq.rhs,
                     generator=generator,
-                    sample_size=1000)
+                    sample_size=500)
     ED.generate_models()
     ED.fit_models()
     print(ED.get_results())
+
+    top.update(ED.get_results(top.n))
 
     E = np.array(eq.E)
     F = np.array(eq.F)
     T = np.array(eq.T)
     V = np.array(eq.V)
 
-    for p in ED.get_results(1):
-        equation = str(p.expr)[1:-1]
-        cr, cv = eq.parse(equation)
-        speed = (np.tanh(-np.log2(p.estimated["fun"])/4)+1)/2
+    for p in top.best:
+        code = list(p.info["trees"].keys())[0]
+        cr, cv = eq.parse(code)
+        speed = (np.tanh(-np.log2(p.estimated["fun"])/k)+1)/2
         print(speed)
         # "+":0, "-": 0, "F": 0,
         total = cr["+"] + cr["-"] + cr["F"]
@@ -41,11 +43,12 @@ def one_generation(eq, speed):
         T = T*(1-speed) + T2*speed
         V = V*(1-speed) + V2*speed
     
-    return (list(E),list(F),list(T),list(V))
+    return (list(E),list(F),list(T),list(V), top)
 
 def evolve(eq, gens):
+    top = leaderboard(3)
     for i in range(gens):
-        E, F, T, V = one_generation(eq, 0.1)
+        E, F, T, V, top = one_generation(eq, 3, top) 
         print(E,F,T,V)
         eq.E = E
         eq.F = F
@@ -57,8 +60,8 @@ if __name__ == "__main__":
     from make_data import *
 
     @pandise
-    def first(x1, x2, x3, x4, x5):
-        return x1 - 3*x2 - x3 -x5
+    def first(x0, x1, x2, x3, x4):
+        return x0 - 3*x1 - x2 -x4
     
     eq1 = problem(first)
     eq1.make_data(500)

@@ -167,3 +167,20 @@ class problem:
 
         
 
+class leaderboard:
+    def __init__(self, n):
+        self.best = []
+        self.n = n
+    
+    def remove_dupes(self):
+        # based on deduction tree. One could make it based on sympy expr instead
+        temp = dict()
+        for el in self.best:
+            temp[list(el.info["trees"].keys())[0]] = el
+        self.best = list(temp.values())
+
+
+    def update(self, new):
+        self.best.extend(new)
+        self.remove_dupes()
+        self.best = sorted(self.best, key=lambda e: e.estimated["fun"])[:self.n]
