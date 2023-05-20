@@ -116,122 +116,54 @@ class problem:
         s += f"'x{i+1}' [{1-total:0.16f}]"
         return s
     
-    def parse(self, s : str):
-        # every parsing of E concludes with the third rule. If + was enacted once, F was then enacted in addition
-        tokens = tokenize(s)
+    def parse(self, code : str):
+        # we give higher weight to the binary symbols
+        # similarly we have to increase weight for (E) and sin(E)
         count_rules = {"+":0, "-": 0, "F": 0, "*": 0, "/": 0, "T": 0, "V":0, "(":0, "sin":0}
         count_vars = {f"x{i}":0 for i in range(len(self.V)+1)}
-        was_sin = False
-        no_E_op = True
-        no_F_op = True
-
+        symbol_stack = ["E"]
         
-        for i,token in enumerate(tokens):
-            if token[:2] == "**":
-                no_F_op = False
-                z = int(token[2:])-1
-                count_rules["*"] += z*2
-                count_rules["T"] += z
-                if tokens[i-1][0] == "x":
-                    count_vars[tokens[i-1]] += z
-                continue
-            if was_sin:
-                # if previous token was "sin", next token is "("
-                was_sin = False
-                continue
-            try:
-                # cases like 3(x1+x2) (not 3x1), artifact of parsing
-                z = int(token)-1
-                count_rules["+"] += z*2
-                count_rules["F"] += z
-                no_E_op = False
-                continue
-            except ValueError:
-                pass
-            if token[0]=="x":
-                # every xn came from a V
-                count_vars[token] += 1
-                count_rules["V"] += 1
-                count_rules["F"] += no_E_op
-                count_rules["T"] += no_F_op
-
-            elif "x" in token:
-                # cases like x2   +x1+x1 -> x2+  2x1 
-
-                left, right = token.split("x")
-                if left[0] == "-":
-                    # -2x1 = -x1-x1
-                    # technically -2x1 = x1-x1-x1-x1
-                    # but since x2 -2x1 = x2 -x1 -x1, we choose this route for simplicity
-                    left = int(left[1:])
-                    no_E_op = False
-                    count_rules["-"] += left*2
-                    count_rules["F"] += left
-                    count_vars["x"+right] += left
-                else:
-                    left = int(left)
-                    no_E_op = False
-                    count_rules["+"] += left*2
-                    count_rules["F"] += left
-                    count_vars["x"+right] += left
-            elif token == "+":
-                count_rules["+"] += 2
-                count_rules["F"] += 1
-                no_E_op = False
-            elif token == "-":
-                count_rules["-"] += 2
-                count_rules["F"] += 1
-                no_E_op = False 
+        for ch in code:
+            ch = int(ch)
+            last = symbol_stack.pop()
+            match last:
+                case "E":
+                    match ch:
+                        case 0:
+                            symbol_stack.extend(["F", "E"])
+                            count_rules["+"] += 2
+                        case 1:
+                            symbol_stack.extend(["F", "E"])
+                            count_rules["-"] += 2
+                        case _:
+                            symbol_stack.append("F")
+                            count_rules["F"] += 1
+                case "F":
+                    match ch:
+                        case 0:
+                            symbol_stack.extend(["T", "F"])
+                            count_rules["*"] += 2
+                        case 1:
+                            symbol_stack.extend(["T", "F"])
+                            count_rules["/"] += 2
+                        case _:
+                            symbol_stack.append("T")
+                            count_rules["T"] += 1
+                case "T":
+                    match ch:
+                        case 0:
+                            symbol_stack.append("V")
+                            count_rules["V"] += 1
+                        case 1:
+                            symbol_stack.append("E")
+                            count_rules["("] += 2
+                        case _:
+                            symbol_stack.append("E")
+                            count_rules["sin"] += 2
+                case "V":
+                    count_vars[f"x{ch}"] += 1
         
-
-            elif token == "sin":
-                count_rules["sin"] += 1
-                count_rules["F"] += no_E_op
-                count_rules["T"] += no_F_op
-                was_sin = True
-                no_F_op = True
-                no_E_op = True
-
-            elif token == "(":
-                count_rules["("] += 1
-                count_rules["F"] += no_E_op
-                count_rules["T"] += no_F_op
-                no_F_op = True
-                no_E_op = True
-            elif token == "*":
-                try:
-                    # 3*x1
-                    z = int(tokens[i-1])
-                    if i-1 > 0:
-                        if tokens[i-2] == "-":
-                            z *= -1
-                    if z > 0:
-                        count_rules["+"] += 2*z
-                        count_rules["F"] += z
-                        if tokens[i+1][0] == "x":
-                            count_vars[tokens[i+1]] += z
-                    else:
-                        z *= -1
-                        count_rules["-"] += 2*z
-                        count_rules["F"] += z
-                        if tokens[i+1][0] == "x":
-                            count_vars[tokens[i+1]] += z
-                except ValueError:
-                    count_rules["*"] += 2
-                    count_rules["T"] += 1
-                no_F_op = False
-            elif token == "/":
-                count_rules["/"] += 2
-                count_rules["T"] += 1
-                no_F_op = False
-
-        count_rules["F"] += no_E_op
-        count_rules["T"] += no_F_op
-        if tokens[0][0] == "-" and count_rules["+"] > 1:
-            count_rules["+"] -= 2
         return (count_rules, count_vars)
 
-
-
-
+        
 
