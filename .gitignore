@@ -23,3 +23,10 @@ vaje8/data/*
 *.pyc
 */LICENSE
 */__pycache__
+*.fls
+*.log
+*.fdb_latexmk
+*.aux
+*.out
+*.gz
+*.png

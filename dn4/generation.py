@@ -24,7 +24,7 @@ def one_generation(eq, f_err, size, top):
     T = np.array(eq.T)
     V = np.array(eq.V)
 
-    for p in top.best:
+    for p in top.best[::-1]:
         code = list(p.info["trees"].keys())[0]
         cr, cv = eq.parse(code)
 
@@ -66,6 +66,25 @@ def evolve(eq, k, gens=50, sample_size=1000,  lead_size=4):
             break
     return errors
 
+def dummy(eq, gens=50, sample_size=1000):
+    top = leaderboard(1)
+    errors = []
+    gramatika = eq.gen_grammar()
+    generator = pg.GeneratorGrammar(gramatika)
+    for i in range(gens):
+        ED = pg.EqDisco(data=eq.data, 
+                        lhs_vars=eq.lhs,
+                        rhs_vars=eq.rhs,
+                        generator=generator,
+                        sample_size=sample_size)
+        ED.generate_models()
+        ED.fit_models()
+        print(ED.get_results())
+        top.update(ED.get_results(top.n))
+        errors.append((i*sample_size, top.best[0].estimated["fun"]))
+        if top.best[0].estimated["fun"] < 1e-6:
+            break
+    return errors
 
 
 if __name__ == "__main__":
