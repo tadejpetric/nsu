@@ -1,7 +1,10 @@
 import ProGED as pg
 import numpy as np
+from make_data import *
+import warnings
 
-def one_generation(eq, k, top):
+def one_generation(eq, f_err, size, top):
+    
     # higher k, higher learning rate. k in [0, infty)
     gramatika = eq.gen_grammar()
     generator = pg.GeneratorGrammar(gramatika)
@@ -9,7 +12,7 @@ def one_generation(eq, k, top):
                     lhs_vars=eq.lhs,
                     rhs_vars=eq.rhs,
                     generator=generator,
-                    sample_size=500)
+                    sample_size=size)
     ED.generate_models()
     ED.fit_models()
     print(ED.get_results())
@@ -24,8 +27,9 @@ def one_generation(eq, k, top):
     for p in top.best:
         code = list(p.info["trees"].keys())[0]
         cr, cv = eq.parse(code)
-        speed = (np.tanh(-np.log2(p.estimated["fun"])/k)+1)/2
-        print(speed)
+
+        speed = f_err(p.estimated["fun"])
+        #print(speed)
         # "+":0, "-": 0, "F": 0,
         total = cr["+"] + cr["-"] + cr["F"]
         # desired is [cr["+"], cr["-"]] / total
@@ -45,16 +49,24 @@ def one_generation(eq, k, top):
     
     return (list(E),list(F),list(T),list(V), top)
 
-def evolve(eq, gens):
-    top = leaderboard(3)
+def evolve(eq, k, gens=50, sample_size=1000,  lead_size=4):
+    warnings.filterwarnings("ignore")
+    top = leaderboard(lead_size)
+    errors = []
     for i in range(gens):
-        E, F, T, V, top = one_generation(eq, 3, top) 
+        E, F, T, V, top = one_generation(eq, k(i), sample_size, top)
+        errors.append((i*sample_size, top.best[0].estimated["fun"]))
         print(E,F,T,V)
         eq.E = E
         eq.F = F
         eq.T = T
         eq.V = V
-    return eq
+
+        if top.best[0].estimated["fun"] < 1e-6:
+            break
+    return errors
+
+
 
 if __name__ == "__main__":
     from make_data import *
@@ -63,6 +75,18 @@ if __name__ == "__main__":
     def first(x0, x1, x2, x3, x4):
         return x0 - 3*x1 - x2 -x4
     
+    @pandise
+    def second(x1, x2):
+        return x1**5 * x2**3
+
+    @pandise
+    def third(x1, x2):
+        return np.sin(x1) + np.sin(x2 / x1**2)
+    
+    np.random.seed(3)
+    learning_rate = lambda i: min(-i+5, 3)
+
     eq1 = problem(first)
-    eq1.make_data(500)
-    evolve(eq1, 50)
+    eq1.make_data(200)
+    errors = evolve(eq1, learning_rate)
+    x,y = zip(*errors)

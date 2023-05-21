@@ -17,11 +17,11 @@ def pandise(function):
     return apply_to_table
 
 
-def makegraph(function, rows, lower, upper):
+def makegraph(function, rows, lower, upper, seed=1):
 
     columns = len(signature(function).parameters)
 
-    np.random.seed(1)
+    np.random.seed(seed)
     dataset = pd.DataFrame()
     for i in range(columns):
         dataset[f"x{i}"] = np.random.default_rng(i).uniform(lower, upper, rows)
@@ -81,8 +81,8 @@ class problem:
         self.rhs = get_rhs(function)
         self.lhs = ["y"]
     
-    def make_data(self, rows, lower=-10, upper=10):
-        self.data = makegraph(self._func, rows, lower, upper)
+    def make_data(self, rows, lower=-10, upper=10, seed=1):
+        self.data = makegraph(self._func, rows, lower, upper, seed)
 
 
     def etoi(s):
@@ -169,6 +169,7 @@ class problem:
 
 class leaderboard:
     def __init__(self, n):
+        # best is array from best to worst n seen values
         self.best = []
         self.n = n
     
