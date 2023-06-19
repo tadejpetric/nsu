@@ -4,6 +4,7 @@ import pandas as pd
 import random
 import torch.nn.functional as F
 from torch import nn
+from torch_geometric.nn import GCNConv
 
 class lstm(nn.Module):
     def __init__(self, input, output, hidden, layers):
@@ -27,14 +28,14 @@ class lstm(nn.Module):
         return output
     
 class deep_linear(nn.Module):
-    def __init__(self, input, output, hidden, layers):
+    def __init__(self, output, hidden, input):
         super(deep_linear, self).__init__()
         self.input_size = input
         self.output_size = output
         self.hidden_size = hidden
-        self.layers = layers
+        self.layers = input # for compatibility 
 
-        self.lin1 = nn.Linear(layers, hidden)
+        self.lin1 = nn.Linear(input, hidden)
         self.lin2 = nn.Linear(hidden, hidden)
         self.lin3 = nn.Linear(hidden, hidden)
         self.lin4 = nn.Linear(hidden, output)
@@ -79,3 +80,4 @@ class recurrent(nn.Module):
         
         output = self.decoder(output[-1, :])
         return output
+

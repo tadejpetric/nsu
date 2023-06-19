@@ -1,0 +1,93 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{hyperref}
+
+\begin{document}
+\title{Peta domača naloga}
+\author{Tadej Petrič}
+\maketitle
+Na vseh grafih je x os število dni (od začetka predvidovanja). Kadar sta na grafu dve krivulji je y os vrednost napovedi (oranžna napoved, modra točen rezultat). Kadar je na grafu samo ena krivulja je y os \(L_1\) napaka v določenem dnevu. Prvih N korakov je vedno točnih, kasnejše napoveduje algoritem.
+
+\section{Prva}
+Za napovedovanje sem poskusil različne algoritme: rekurenčne nevronske mreže, LSTM in navadne globoke nevronske mreže. Pri rekurenčnih in LSTM mrežah je število slojev enako parametru N (zgodovini primerov), za izhodni parameter pa sem vedno izbral 1. Pri globoki nevronski mreži pa je velikost vhodne plasti enaka N, izhodna plast pa prav tako vedno 1. Da sem iz tega razvil model, ki napoveduje za M=7 ali M=30 sem rezultat napovedi uporabil kot vhod zadnjega sloja nevronske mreže (preostanek vhodov pa zamaknil). Alternativni pristop bi bil, da bi takoj zadnji sloj napovedoval več členov (7 ali 30), vendar se je z mojimi meritvami bolj odnesel trenutni pristop.
+
+\subsection*{postopki učenja in testiranja}
+Nevronsko mrežo sem učil na vsakem mestu posebaj 
+
+Iskanje je implementirano v \texttt{pysrpy.py}, preostanek uporabe pa v zvezku \texttt{resitev.ipynb}. Najboljše enačbe genetskega najdemo v \texttt{hall\_of\_fame.csv}.
+
+Dobim enačbo 
+\begin{align*}
+    \left(((2.5343432-\eta)(T_w-T_a)0.027452817)\right)^2 \sin(\theta)
+\end{align*}
+
+Vidimo, da ta enačba ustreza vsem pogojem domenskega predznanja. Theta je v sinusu (ki je ena za pravokotne \(\theta\)), tok je odvisen od nelinearne razlike \(\sim (T_w-T_a)^2\), višji izolacijski indeks pa povzroči nižje toplotne tokove (kjer upoštevamo, da je indeks vedno manjši od 1).
+
+\begin{figure}[htb]
+    \includegraphics[width=0.8\textwidth]{out_genetski}
+    \caption{Rezultat genetskega algoritma}
+\end{figure}
+\begin{figure}[htb]
+    \includegraphics[width=0.8\textwidth]{out_regresija}
+    \caption{Rezultat linearne regresije}
+\end{figure}
+\begin{figure}[htb]
+    \includegraphics[width=0.8\textwidth]{out_ridge}
+    \caption{Rezultat ridge regresije, \(\lambda=100000\)}
+\end{figure}
+\begin{figure}[htb]
+    \includegraphics[width=0.8\textwidth]{out_lasso}
+    \caption{Rezultat lasso regresije, \(\lambda=500\)}
+\end{figure}
+Sedaj, ko vemo približno obliko enačbe, uporabimo še linearno regresijo za sanity check: enačbo razstavimo v polinom, parametriziramo konstante in jih poiščemo z linearno regresijo (in regularizirano linearno regresijo). Vidimo, da v vsakem primeru dobimo podobno kot izhod genetskega algoritma ter vsi pristopi dobro opisujejo podatke (kot vidimo iz grafov, kjer je popolno prileganje premica \(y=x\)). Lahko bi (morali, za objavljen članek. Še posebaj za regularizirane metode lasso in ridge) še dodatno uporabili train-test split, ampak nimamo veliko podatkov in rezultati pridejo podobni. Zaradi omenjenih razlogov (več pristopov vodi k isti enačbi, enačba ustreza kriterijem predznanja, ki niso bila uporabljena za pripravo problema, dobro prileganje rešitvi, \dots) enačbi še kar dobro zaupam. Verjetno se pa konstante malo razlikujejo od originala (ugibam, da je \(2.5343432=2.5\) in \(0.027452817=\sqrt{0.00075}\)).
+
+
+\section{Druga} 
+\subsection*{Opis datotek} V datoteki \verb|make_data.py| sestavim podatkovne strukture in pripravim podatke. Spišem tudi svojo funkcijo za generiranje podatkov, ker sem slep in sem prepozno prebral, da je že implementirana v domači nalogi (je pa zato zelo enostavno delati nove probleme). Razred \verb|problem| sprejme poljubno funkcijo \(\mathbb R^n\to \mathbb R\), na kateri smo uporabili dekorator \verb|@pandise| (ki funkcijo pretvori v funkcijo pandasovih tabel) in inicializira verjetnosti (in spremenljivke) glede na število parametrov, ki jih sprejme funkcija. Ko pokličemo metodo \verb|make_data| se inicializirajo še podatki. Verjetnosti lahko prosto posodabljamo s spreminjanjem parametrov (npr \verb|problem.E[0]| opisuje verjetnost izbire operatorja \(+\)). Gramatiko trenutnih generiramo z \verb|gen_grammar| (kjer pazimo, da izpisujemo verjetnosti v visoki natančnosti v ne-znanstveni notaciji zaradi proGEDa. Bilo bi lepo, če bi lahko izpustil eno vrednost v gramatiki in se ta sama nastavi na \(1-\text{total}\)). Metoda \verb|parse| pretvori kodo drevesa v slovar, ki pove kolikokrat je bilo kakšno pravilo uporabljeno (enostaven stack machine in case analysis). V datoteki je tudi razred \verb|leaderboard|, ki shranjuje najboljših \(n\) različnih (glede na drevo izpeljave) izrazov urejenih po napaki.
+
+V datoteki \verb|generation.py| je implementiran ključni del algoritma. Funkcija \verb|evolve| sprejme objekt \verb|problem| in na njem izvaja \verb|gens| mnogo iteracij funkcije \verb|one_generation|. Vsaka generacija popravi verjetnosti na nekaj boljšega. Za primerjavo je tukaj še funkcija \verb|dummy|, ki uteži ne popravlja in jih pusti enako porazdeljene kot prej (v mojem primeru enakomerno).
+
+V datoteki \verb|save_average.py| inicializiram podatke ter 10x poženem moj algoritem in shranim rezultate. Shranim rezultate tudi za neodvisno vzorčenje. To traja več ur (hitreje bi delalo, če bi lahko le posodobil gramatiko in ohranil modele, saj gre verjetno večino časa za fittanje podatkov).
+
+\subsection*{Opis algoritma} Algoritem deluje iterativno z izboljšavo glede na elito.
+
+Ko inicializiramo podatke so verjetnosti v gramatiki enakomerno porazdeljene. Potem najdemo najboljših \(n\) rezultatov in jih shranimo v objekt \texttt{leaderboard}. 
+
+Nato se sprehodimo po teh najboljših rezultatih. Za vsak rezultat shranimo napako ter nastavimo \(s=f(e)\) kjer je \(e\) napaka, \(f\) hitrost učenja in \(s\) hitrost. To nam omogoča, da spremenimo hitrost učenja glede na napako - manjše napake (boljše enačbe) bodo bolj vplivale na verjetnosti kot večje napake in dale večji popravek. Več podrobnosti o izbiri funkcije \(f\) kasneje. 
+
+Ko imamo hitrost učenja, izračunamo potreben popravek. Preštejemo kolikokrat smo videli različne simbole s \texttt{parse} ter sestavimo to v vektor  (če ne bi bilo rekurzivnih pravil bi dobili nekakšen MLE estimator, sedaj je pa bolj hevrestično). Torej če smo videli v naši dobri enačbi \(+\) trikrat, \(-\) dvakrat in \(F\) petkrat naredimo vektor 
+\[
+    E_2=(3\cdot 2, 2\cdot2)/(3\cdot 2+2\cdot 2 + 5).
+\]
+Simbol za \(+\) in \(-\) obtežimo z 2, saj vsaka enačba vedno enkrat uporabi pravilo za \(F\). Tako poudarimo, da je v izrazu \(x+y\) ključni del vsota (in šele \emph{za} generiranjem vsote se splača generirati \(F\) - nastavimo ``priority'') ter je potrebno povišati verjetnos za ta konstruktor. Podobno za ostala pravila.
+
+Nato popravimo verjetnosti s konveksno kombinacijo \(E = E(1-s) + E_2(s)\), kjer je \(E_2\) vektor iz prejšnjega odstavka (podobno naredimo za \(F,T,V\)). Konveksna kombinacija dveh elementov z 1-normo 1 nam poskrbi, da dobimo nov element velikosti 1. Prav tako povečamo verjetnost za pravila, ki smo jih večkrat srečali. Geometrično gledano se premaknemo v smer uspešnih verjetnosti za \(s\). Večji kot je \(s\), več se premaknemo. Tukaj omenim še izbiro funkcije hitrosti \(f\). Želimo funkcijo, ki ima vrednost blizu \(1\) za napake okoli \(0\) in vrednost blizu \(0\) za slabe enačbe. Točni parametri so odvisni od enačbe, jaz sem implementiral \((\tanh(-\log(e)/k)+1)/2\) (kjer je \(k\) parameter konvergence. Višji kot je, hitreje konvergira. Lahko ga nastavimo, da se spreminja glede na generacijo, kar nam omogoča, da prvih nekaj generacij bolj spremeni uteži), \(1/(x+1)^k\) in konstantno hitrost. Za prvi in drugi problem je boljša prva funkcija, za tretji problem je boljša zadnja funkcija (saj so napake pri tretjem problemu zelo majhne, okoli \(0.5\) za slabe rezultate, prva funkcija bo pa to razumela kot dober rezultat ne glede na parametre).
+
+To zaključi eno iteracijo algoritma. Ta isti postopek ponavljamo do konvergence, kjer pa upoštevamo, da ne izboljšujemo po najboljših enačbah v generaciji ampak po najboljši videni enačbi na sploh (gledano genetsko, poskrbimo, da najboljših \(n\) enačb vedno preživi generacijo).
+
+\begin{figure}[h]
+    \includegraphics[width=0.8\textwidth]{prva}
+    \caption{Primerjava za \(y=x_1-3x_2-x_3-x_5\)}
+\end{figure}
+\begin{figure}[h]
+    \includegraphics[width=0.8\textwidth]{druga}
+    \caption{Primerjava za \(y=x_1^5x_2^3\)}
+\end{figure}
+\begin{figure}[h]
+    \includegraphics[width=0.8\textwidth]{tretja}
+    \caption{Primerjava za \(y=\sin(x_1)+\sin(x_2/x_1^2)\)}
+\end{figure}
+Na grafih je vedno oranžna barva enakomerna gramatika, modra pa moja izboljšava. Zaradi hitrosti sem kdaj uporabil večji batch size za neodvisno vzorčenje (po definiciji neodvisnosti to ne vpliva na končni rezultat, le na gladkost krivulje) (zato izgleda, da se kdaj krivulje začnejo kasneje). Kdaj sem jim tudi dal malo manj vzorcev, ker generiranje traja več ur ampak to ne spremeni zaključka (zato pri prvi izgleda, da se oranžne krivulje končajo prej). Preostanek grafov govori sam zase, mojemu algoritmu napaka pada veliko hitreje (skriva pa obnašanje v neskončnosti. Ampak nimam neskončno časa torej bo ta graf tudi ostal skrit).
+\subsection*{Diskusija} Algoritem veliko izboljša delovanje programa v primerjavi z enakomerno porazdeljeno gramatiko. Slabost pa je, da je bolj odvisen od začetnih hiperparametrov (sploh v tretji enačbi). Za razliko od enakomerno porazdeljenega Monte-Carlo algoritma nam konvergenca ni zagotovljena z verjetnostjo \(1\), saj je algoritem občutljiv na lokalne minimume. Če bo dolgo časa najboljša enačba imela samo \('x_0'\), bo nastavil verjetnost generiranja \('x_0'\) na \(\approx 1\) in ne bomo nikoli generirali \('x_1'\). To lahko preprečimo z manj agresivno hitrostjo nastavljanja napake ali pa s povečanjem elite (če hranimo najboljšo enačbo je zelo verjetno, da dobimo nekaj neugodnega. Če hranimo najboljših \(5\) je manj verjetno, da so \emph{vsi} neugodni). Lahko bi tudi nastavili minimalno verjetnost konstruktorjev (torej, da verjetnost pravila ne more pasti pod npr. \(5\%\)).
+
+Povezano z lokalnimi minimumi je tudi to, da enačbe niso čisto zvezne glede na pravila. Lahko se zgodi, da iščemo npr. enačbo oblike \(f(g(x))\) ampak in \(f(x)\) in \(g(x)\) sama sta veliko slabša kot samo \(x\). To lahko povzroči, da ju algoritem izloči prehitro in se ju ne nauči. To je tudi problem pri 3. enačbi, če podatkovje generiramo na napačen način (saj lahko prevladujejo \(\sin(x_0), x_0, x_0\sin(x_0)\), odvisno kolikšen del \(x\) osi vzamemo za vzorec in če vzorčimo enakomerno). Temu se lahko izognemo tako, da generiramo več enačb na generacijo. Slabost tega je, da je algoritem potem počasnejši.
+
+Kljub naštetim pomankljivostim algoritem dela dobro. V mojih poskusih namreč klasično vzorčenje z enakomerno porazdelitvijo nikoli ne konvergira do rezultata, medtem ko moj algoritem ponavadi konvergira (v prvi nalogi v 70\% primerov, v drugi 100\%, v tretji pa v 40\% primerov (in dodatno en primer zgreši le za 0.09). Nekateri primeri bi še lahko konvergirali ampak sem omejil število korakov v algoritmu). Težave ima le pri tretji, saj pogosto eliminira \('x_1'\) prehitro ampak to bi lahko popravil z bolj skrbno hiperparametrov. Kljub temu dela bolje kot privzeta metoda.
+
+Algoritem bi lahko izboljšali na več načinov. Lahko bi drugače računali napako (npr. upoštevamo še odvod funkcije), lahko bi bolje izbrali funkcijo hitrosti učenja. Popravljanje je podobno stohastičnemu gradientnemu spustu, torej bi lahko izbrali veliko popravkov iz tam. Najbolj zanimiva opcija, pa bi bila prek reinforcement učenja (npr. deep Q learning). Cilj bi bil, da naredimo nevronsko mrežo katere izhodi so uteži gramatike, funkcija napake pa bi bila kako dobro se top \(n\) generiranih funkcij prilega danim podatkom. Ta način (kombiniranja nevronskih in gramatik) učenja ima kar nekaj prednosti, saj je gramatika spremenila problem v strukturiranega (fiksno število parametrov, verjetnosti v gramatiki, za izhod) in gramatika preprečuje preprileganje (zaradi težnje k bolj enostavnim izrazom in stohastične narave), moč in fleksibilnost nevronskih mrež pa omogočata bolj inteligentno nastavljanje parametrov.
+
+Sledijo še možne tehnične izboljšave: multithreading bi bilo enostavno dodati v program, še bolj kot to pa bi pomagalo, če bi lahko le spreminjal gramatiko in ohranil modele. Ker se pravila gramatike ne spreminjajo, bi tudi rezultat fittanja ostal enak (kar je najbolj časovno potraten del programa). Fittati bi bilo potrebno le novo-odkrite enačbe (glede na unikatno odkrite sympy izraze). Sicer bi se spremenil \texttt{model.p} tekom evolucije ampak to ne vpliva na rezultat. Predvidevam, da bi to skrajšalo čas za 90\%.
+
+\end{document}
