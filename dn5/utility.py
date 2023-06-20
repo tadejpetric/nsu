@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from torch import nn
 
 def predict_n_deep(X, city, date, model, n):
-    
+    # predicts n future results for the model
     predictions = torch.zeros(model.layers+n)
     predictions[0:model.layers] = X[date : date + model.layers, city]
     for i in range(n):
@@ -15,6 +15,7 @@ def predict_n_deep(X, city, date, model, n):
     return predictions.detach()
 
 def compute_errors_deep(X, model, starts, n):
+    #computes the average L1 errors (wrt. distance from start) over the entire X. Usually X=test dataset
     errors = torch.zeros(n+model.layers)
     for start in starts:
         for city in range(X.shape[1]):
@@ -26,7 +27,7 @@ def compute_errors_deep(X, model, starts, n):
     return errors
 
 def predict_n(X, city, date, model, n):
-    
+    # predicts n future results for the model
     predictions = torch.zeros(model.layers+n)
     predictions[0:model.layers] = X[date : date + model.layers, city]
     for i in range(n):
@@ -35,6 +36,7 @@ def predict_n(X, city, date, model, n):
     return predictions.detach()
 
 def compute_errors(X, model, starts, n):
+    #computes the average L1 errors (wrt. distance from start) over the entire X. Usually X=test dataset
     errors = torch.zeros(n+model.layers)
     for city in range(X.shape[1]):
         for start in starts:
@@ -47,16 +49,18 @@ def compute_errors(X, model, starts, n):
 
 
 def generate_problem(X, city, j, batch_size, n, m=1, maxwidth = 181):
-    # last index available 192. Reserved for data, so i+n = 191
+    # returns X and y pair, a datapoint for the neural network to learn from
     batch_size = min(batch_size, maxwidth-city-2)
     data1 = X[j:j+n, city:city+batch_size].view(n,batch_size,m)
     ysr = X[j+n+1, city:city+batch_size].view(batch_size, m)
+    # if we predict for multiple elements at once
     #a = X[j+n+1:j+n+1+m, city:city+batch_size].split(1)
     #a = tuple(map(lambda z: torch.transpose(z, 1,0), a))
     #ysr = torch.cat(a, 1)
     return (data1, ysr)
 
 def create_dataset(X, batch_size, n, m=1, maxwidth=181):
+    # collection of all possible datapoints, shuffled
     cities_count = int(X.shape[1])
     datapoints = int(X.shape[0])
     arr = []
@@ -70,6 +74,7 @@ def create_dataset(X, batch_size, n, m=1, maxwidth=181):
     return arr
 
 def train_recurrent(model, optimiser, criterion, dset, epochs):
+    # training loop for the recurrent or LSTM model
     model.train()
     for epoch in range(epochs):
         print("Epoch ", epoch)
@@ -89,6 +94,7 @@ def train_recurrent(model, optimiser, criterion, dset, epochs):
     return model
 
 def train_deep(model, optimiser, criterion, dset, epochs):
+    # training loop for the deep model
     model.train()
     for epoch in range(epochs):
         print("Epoch ", epoch)
@@ -110,6 +116,7 @@ def train_deep(model, optimiser, criterion, dset, epochs):
 
 
 def compute_best_worst(X, model, starts, n):
+    # returns the data required to plot the best-fitting prediction and the worst-fitting prediction
     worst_err = 0
     best_err = float("inf")
 
@@ -136,6 +143,7 @@ def compute_best_worst(X, model, starts, n):
     return (best_real, best_mine, worst_real, worst_mine)
 
 def compute_best_worst_deep(X, model, starts, n):
+    # returns the data required to plot the best-fitting prediction and the worst-fitting prediction
     worst_err = 0
     best_err = float("inf")
 
