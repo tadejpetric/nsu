@@ -152,4 +152,4 @@ print("--------first done---------")
 print("--------second done--------")
 
 trd(10)
-trddu(10)
+#trddu(10)
